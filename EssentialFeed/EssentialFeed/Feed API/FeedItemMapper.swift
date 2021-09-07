@@ -36,6 +36,6 @@ internal class FeedItemMapper {
             return .failure(.invalidData)
         }
         
-        return .sucess(root.feed)
+        return .success(root.feed)
     }
 }

@@ -18,9 +18,11 @@ class URLSessionHTTPClient {
     struct UnexpectedValuesRepresentation: Error {}
     
     func get(from url: URL, completion: @escaping (HTTPClientResult) -> Void) {
-        session.dataTask(with: url) { _, _, error in
+        session.dataTask(with: url) { data, response, error in
             if let error = error {
                 completion(.failure(error))
+            } else if let data = data, data.count > 0, let response = response as? HTTPURLResponse {
+                completion(.success(data, response))
             } else {
                 completion(.failure(UnexpectedValuesRepresentation()))
             }
@@ -49,6 +51,10 @@ class URLSessionHTTPClientTests: XCTestCase {
             expectation.fulfill()
         }
         
+        addTeardownBlock {
+            URLProtocolStub.stopInterceptingRequests()
+        }
+        
         makeSUT().get(from: url) { _ in }
         
         wait(for: [expectation], timeout: 1.0)
@@ -72,6 +78,28 @@ class URLSessionHTTPClientTests: XCTestCase {
         XCTAssertNotNil(resultErrorFor(data: anyData(), response: anyNonHTTPURLResponse(), error: anyNSError()))
         XCTAssertNotNil(resultErrorFor(data: anyData(), response: anyHTTPResponse(), error: anyNSError()))
         XCTAssertNotNil(resultErrorFor(data: anyData(), response: anyNonHTTPURLResponse(), error: nil))
+    }
+    
+    func test_getFromURL_succedsOnHTTPURLResponseWithData() {
+        let data = anyData()
+        let response = anyHTTPResponse()
+        URLProtocolStub.stub(data: data, response: response, error: nil)
+        
+        let expectation = expectation(description: "Wait for completion")
+        
+        makeSUT().get(from: anyURL()) { result in
+            switch result {
+                case let .success(receivedData, receivedHTTPResponse):
+                    XCTAssertEqual(receivedData, data)
+                XCTAssertEqual(receivedHTTPResponse.url, receivedHTTPResponse.url)
+                XCTAssertEqual(receivedHTTPResponse.statusCode, receivedHTTPResponse.statusCode)
+                default:
+                    XCTFail("Expected success, got \(result) instead")
+            }
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 1.0)
     }
     
     // MARK: - Helpers
@@ -125,7 +153,7 @@ class URLSessionHTTPClientTests: XCTestCase {
     
     private class URLProtocolStub: URLProtocol {
         private static var stub: Stub?
-        private static var requestObserver: ((URLRequest) -> Void)?
+        static var requestObserver: ((URLRequest) -> Void)?
         
         private struct Stub {
             let response: URLResponse?

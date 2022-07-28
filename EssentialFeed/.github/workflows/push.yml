@@ -1,0 +1,18 @@
+name: Push
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+jobs:
+  unit_tests:
+    name: Run unit tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Unit tests
+        run: xcodebuild clean build test -project EssentialFeed/EssentialFeed.xcodeproj -scheme "CI" CODE_SIGN_IDENTITY="" CODE_SIGN_REQUIRED=NO

@@ -11,21 +11,7 @@ import EssentialFeed
 class EssentialFeedAPIEndToEndTests: XCTestCase {
 
     func test_endToEndTestServerGETFeedResult_matchesFixedTestAccountData() throws {
-        let testServerURL = URL(string: "https://raw.githubusercontent.com/srehouni/ios_lead_essential_developer/main/EssentialFeed/EssentialFeedAPIEndToEndTests/Resources/feed.json")!
-        let client = URLSessionHTTPClient()
-        let loader = RemoteFeedLoader(url: testServerURL, client: client)
-        
-        let expectation = expectation(description: "Wait for load completion")
-        
-        var receivedResult: LoadFeedResult?
-        loader.load { result in
-            receivedResult = result
-            expectation.fulfill()
-        }
-        
-        wait(for: [expectation], timeout: 5.0)
-        let result = try XCTUnwrap(receivedResult, "Expected successful feed result, got nil result instead ")
-        
+        let result = try XCTUnwrap(getFeedResult(), "Expected successful feed result, got nil result instead ")
         switch result {
             case let .success(items):
                 XCTAssertEqual(items.count, 8, "Expected 8 items in the test account feed")
@@ -44,6 +30,23 @@ class EssentialFeedAPIEndToEndTests: XCTestCase {
     }
     
     // MARK: - Helpers
+    
+    private func getFeedResult() -> LoadFeedResult? {
+        let testServerURL = URL(string: "https://raw.githubusercontent.com/srehouni/ios_lead_essential_developer/main/EssentialFeed/EssentialFeedAPIEndToEndTests/Resources/feed.json")!
+        let client = URLSessionHTTPClient()
+        let loader = RemoteFeedLoader(url: testServerURL, client: client)
+        
+        let expectation = expectation(description: "Wait for load completion")
+        
+        var receivedResult: LoadFeedResult?
+        loader.load { result in
+            receivedResult = result
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 5.0)
+        return receivedResult
+    }
     
     private func expectedItem(at index: Int) -> FeedItem {
         return FeedItem(id: id(at: index),

@@ -1,10 +1,6 @@
 name: Push
 
-on:
-  push:
-    branches:
-      - master
-      - develop
+on: [push]
 
 jobs:
   unit_tests:

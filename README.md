@@ -1,5 +1,7 @@
 # Essential App Case Study
 
+[![Push](https://github.com/srehouni/ios_lead_essential_developer/actions/workflows/push.yml/badge.svg?branch=main)](https://github.com/srehouni/ios_lead_essential_developer/actions/workflows/push.yml)
+
 ## Image Feed Feature Specs
 
 ### Story: Customer requests to see their image feed
